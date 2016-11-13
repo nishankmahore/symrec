@@ -1,0 +1,78 @@
+{
+    "snomedct": [
+        {
+            "end_char": 55,
+            "end_token": 11,
+            "label": "FINDING",
+            "start_char": 50,
+            "start_token": 10,
+            "text": "fever"
+        },
+        {
+            "end_char": 71,
+            "end_token": 14,
+            "label": "FINDING",
+            "start_char": 63,
+            "start_token": 13,
+            "text": "sweating"
+        },
+        {
+            "end_char": 82,
+            "end_token": 17,
+            "label": "FINDING",
+            "start_char": 77,
+            "start_token": 16,
+            "text": "joint"
+        },
+        {
+            "end_char": 87,
+            "end_token": 18,
+            "label": "FINDING",
+            "start_char": 83,
+            "start_token": 17,
+            "text": "pain"
+        },
+        {
+            "end_char": 100,
+            "end_token": 21,
+            "label": "FINDING",
+            "start_char": 93,
+            "start_token": 20,
+            "text": "fatigue"
+        },
+        {
+            "end_char": 143,
+            "end_token": 29,
+            "label": "FINDING",
+            "start_char": 134,
+            "start_token": 28,
+            "text": "dizziness"
+        },
+        {
+            "end_char": 158,
+            "end_token": 32,
+            "label": "FINDING",
+            "start_char": 152,
+            "start_token": 31,
+            "text": "nausea"
+        }
+    ],
+    "entities": [
+          {
+              "end_char": 8,
+              "end_token": 1,
+              "label": "FINDING",
+              "start_char": 0,
+              "start_token": 0,
+              "text": "Backache"
+          },
+          {
+              "end_char": 18,
+              "end_token": 3,
+              "label": "FINDING",
+              "start_char": 13,
+              "start_token": 2,
+              "text": "fever"
+          }
+    ]
+}
