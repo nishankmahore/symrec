@@ -16,15 +16,13 @@ import argparse
 import re
 
 import spacy
+import symrec.callback as clb
 from pymedtermino.snomedct import SNOMEDCT
 from spacy.attrs import LOWER
 from spacy.matcher import Matcher
 from symrec.scraper import scrape
 
 __author__ = 'Aleksandar Savkov'
-
-
-FINDING = 104190
 
 
 def parse_ctype(head_term):
@@ -42,34 +40,6 @@ def parse_ctype(head_term):
         return m.group('type').strip()
     except AttributeError:
         return None
-
-
-def ignore_non_findings(matcher, doc, i, matches):
-    """A callback function that is called for all matches. Currently, it filters
-    out all but the `FINDING` matches, and assigns the matches to the entities
-    iterator.
-
-    :param matcher: spaCy matcher
-    :type matcher: spacy.matcher.Matcher
-    :param doc: spaCy document
-    :type doc: spacy.tokens.doc.Doc
-    :param i: current match index
-    :type i: int
-    :param matches: list of matches in the current document
-    :type matches: list
-    """
-
-    # call on the last match only
-    if i != len(matches)-1:
-        return
-
-    # removing non-findings from the matches
-    findings = [label == FINDING for _, label, _, _ in matches]
-    for j, a_finding in zip(range(len(findings)-1, -1, -1), reversed(findings)):
-        if not a_finding:
-            matches.pop(j)
-
-    doc.ents = matches
 
 
 def get_entity_params(doc):
@@ -125,10 +95,12 @@ class EntityMatcher:
         self.nlp = spacy.load('en', tagger=None, parser=None, entity=None)
         self.matcher = Matcher(self.nlp.vocab)
 
-    def load_snomedct(self):
+    def load_snomedct(self, callback=clb.keep_first_disorder):
         """Loads all SNOMEDCT term surface forms and their types into the
         spaCy matcher.
 
+        :param callback: the matching callback function; default keeps all
+        :type callback: callable
         """
 
         # We don't filter the loaded concepts here in order to 1. demonstrate
@@ -140,7 +112,7 @@ class EntityMatcher:
             key = str(concept.code)
             atts = {'code': concept.code, 'term': concept.term}
 
-            self.matcher.add_entity(key, atts, on_match=ignore_non_findings)
+            self.matcher.add_entity(key, atts, on_match=callback)
             for token_specs in patterns:
                 self.matcher.add_pattern(key, token_specs, label=ctype)
 

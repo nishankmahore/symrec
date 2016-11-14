@@ -15,8 +15,8 @@
 import json
 
 from spacy.tokens.doc import Doc
-from symrec.matcher import EntityMatcher, parse_ctype, ignore_non_findings, \
-    get_entity_params, FINDING
+from symrec.callback import FINDING
+from symrec.matcher import EntityMatcher, parse_ctype, get_entity_params
 
 __author__ = 'Aleksandar Savkov'
 
@@ -42,7 +42,7 @@ class TestCtypes:
         assert parse_ctype('Term text (term type) '), 'Problem with extra space'
 
 
-class TestEntitiParams:
+class TestEntityParams:
 
     def test_normal(self):
 
@@ -71,53 +71,6 @@ class TestEntitiParams:
         test_jsn = list(get_entity_params(doc))
 
         assert [] == test_jsn, 'Unexpected matches found.'
-
-
-class TestAcceptor:
-
-    def test_normal(self):
-
-        # set up the document
-        doc = Doc(em.matcher.vocab, words=['Backache', 'and', 'fever'])
-
-        # set up mock matches
-        matches = [(0, FINDING, 0, 1), (0, 0, 2, 3)]
-
-        # use the last match to call the acceptor
-        match_index = len(matches) - 1
-
-        # call the acceptor func
-        ignore_non_findings(None, doc, match_index, matches)
-
-        # extract the matches
-        test_matches = list([(0, e.label, e.start, e.end) for e in doc.ents])
-
-        # set the expected result
-        filtered_matches = [(0, FINDING, 0, 1)]
-
-        assert test_matches == filtered_matches, 'Broken match filtering.'
-
-    def test_not_last_call(self):
-
-        # set up the document
-        doc = Doc(em.matcher.vocab, words=['Backache', 'and', 'fever'])
-
-        # set up mock matches
-        matches = [(0, FINDING, 0, 1), (0, 0, 2, 3)]
-
-        # set the index to not the last match
-        match_index = len(matches) - 2
-
-        # call the acceptor func
-        ignore_non_findings(None, doc, match_index, matches)
-
-        # extract the results
-        test_matches = list([(0, e.label, e.start, e.end) for e in doc.ents])
-
-        # set the expected result
-        filtered_matches = []
-
-        assert test_matches == filtered_matches, 'Unexpected matches found.'
 
 
 def test_snomed_matching():
