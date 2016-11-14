@@ -45,6 +45,8 @@ def parse_ctype(head_term):
 def get_entity_params(doc):
     """Produces the JSON representation of the entities.
 
+    Note: only used if the spaCy entities iterator is used
+
     :param doc: spaCy doc object
     :type doc: spacy.tokens.doc.Doc
     """
@@ -95,7 +97,7 @@ class EntityMatcher:
         self.nlp = spacy.load('en', tagger=None, parser=None, entity=None)
         self.matcher = Matcher(self.nlp.vocab)
 
-    def load_snomedct(self, callback=clb.keep_first_disorder):
+    def load_snomedct(self, callback=clb.ignore_non_findings):
         """Loads all SNOMEDCT term surface forms and their types into the
         spaCy matcher.
 
@@ -108,7 +110,7 @@ class EntityMatcher:
         # future.
         for concept in SNOMEDCT.all_concepts_no_double():
             ctype = parse_ctype(concept.term).upper()
-            patterns = self.load_concept_pattern(concept)
+            patterns = self.load_concept_patterns(concept)
             key = str(concept.code)
             atts = {'code': concept.code, 'term': concept.term}
 
@@ -128,7 +130,7 @@ class EntityMatcher:
 
         return self.nlp.vocab[i].orth_
 
-    def load_concept_pattern(self, concept):
+    def load_concept_patterns(self, concept):
         """Loads all surface forms of a concept as token patterns into the
         spaCy matcher.
 
@@ -141,6 +143,39 @@ class EntityMatcher:
             # this is a big assumption; difficult to test though
             if not t.strip().endswith(')'):
                 yield [{LOWER: tok.text.lower()} for tok in self.nlp(t)]
+
+    def pack_entities(self, doc, matches):
+        """Packs entity matches (delivered as spaCy matches) into JSON.
+
+        :param doc: spaCy document containing the matches
+        :type doc: spacy.tokens.doc.Doc
+        :param matches: list of matches, each item contains:
+        pattern ID (spacy int representation), label (spacy int representation),
+        start token, and end token.
+        :type matches: list
+        :return: list of match dictionaries
+        :rtype: list
+        """
+
+        packed = []
+
+        for _id, lbl, s, e in matches:
+
+            start_tok = doc[s]
+            end_tok = doc[e - 1]
+
+            packed.append(
+                {
+                    'text': doc[s:e].text,
+                    'label': self._orth(lbl),
+                    'start_token': s,
+                    'end_token': e,
+                    'start_char': start_tok.idx,
+                    'end_char': end_tok.idx + len(end_tok)
+                }
+            )
+
+        return packed
 
     def match(self, text=None, url=None):
         """Extracts SNOMEDCT `findings` from the target text or the text of the
@@ -160,11 +195,11 @@ class EntityMatcher:
             raise ValueError('No target text or URL provided.')
 
         doc = self.nlp(text)
-        self.matcher(doc)
+        matches = self.matcher(doc)
 
-        matches = list(get_entity_params(doc))
+        # matches = list(get_entity_params(doc))
 
-        return matches
+        return self.pack_entities(doc, matches)
 
 
 if __name__ == '__main__':

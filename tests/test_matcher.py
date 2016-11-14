@@ -14,15 +14,18 @@
 # along with SymptomRecogniser.  If not, see <http://www.gnu.org/licenses/>.
 import json
 
+from spacy.attrs import LOWER
+from spacy.matcher import Matcher
 from spacy.tokens.doc import Doc
-from symrec.callback import FINDING
+from symrec.callback import FINDING, keep_matches
 from symrec.matcher import EntityMatcher, parse_ctype, get_entity_params
 
 __author__ = 'Aleksandar Savkov'
 
 
 em = EntityMatcher()
-matches_jsn = json.loads('../res/matches.json')
+matches_fh = open('../res/matches.json', 'r')
+matches_jsn = json.load(matches_fh)
 
 
 class TestCtypes:
@@ -73,6 +76,46 @@ class TestEntityParams:
         assert [] == test_jsn, 'Unexpected matches found.'
 
 
+def test_simple_matching():
+
+    # load a simple pattern to the matcher
+    # method resambles `load_snomedct`
+    patterns = [
+        [{LOWER: 'back'}, {LOWER: 'pain'}]
+    ]
+    key = 'test-id'
+    ctype = 'TEST'
+    atts = {'code': 'test-code', 'term': 'back pain'}
+
+    em.matcher.add_entity(key, atts, on_match=keep_matches)
+    for token_specs in patterns:
+        em.matcher.add_pattern(key, token_specs, label=ctype)
+
+    # prepare a sample sentece
+    text = 'A sentence with back pain other pain and some back thoughts.'
+
+    # extract the matches
+    test_matches = em.match(text)
+
+    # the only match should be this
+    matches = [
+        {
+            'end_char': 25,
+            'end_token': 5,
+            'label': 'TEST',
+            'start_char': 16,
+            'start_token': 3,
+            'text': 'back pain'
+        }
+    ]
+
+    assert test_matches == matches, 'Unexpected matches in basic matching test.'
+
+    # wipe the matcher clean
+    em.matcher = Matcher(em.nlp.vocab)
+
+
+# it is important that this test remains at the end, unless otherwise necessary
 def test_snomed_matching():
 
     text = """

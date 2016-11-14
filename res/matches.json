@@ -17,13 +17,12 @@
             "text": "sweating"
         },
         {
-            "end_char": 82,
-            "end_token": 17,
+            "end_char": 87,
+            "end_token": 18,
             "label": "FINDING",
             "start_char": 77,
             "start_token": 16,
-            "text": "joint"
-        },
+            "text": "joint pain"},
         {
             "end_char": 87,
             "end_token": 18,
